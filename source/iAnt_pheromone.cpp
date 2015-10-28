@@ -12,7 +12,7 @@
  *****/
 iAnt_pheromone::iAnt_pheromone(CVector2         newLocation,
                                vector<CVector2> newTrail,
-                               vector<size_t>   polarity,
+                               vector<size_t>   newPolarity,
                                Real             newTime,
                                Real             newDecayRate)
 {
@@ -21,6 +21,7 @@ iAnt_pheromone::iAnt_pheromone(CVector2         newLocation,
     trail       = newTrail;
 	lastUpdated = newTime;
 	decayRate   = newDecayRate;
+  polarity=newPolarity;
 
     /* standardized initializations */
 	weight      = 1.0;

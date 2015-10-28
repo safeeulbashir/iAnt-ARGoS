@@ -90,7 +90,9 @@ void iAnt_qt_user_functions::DrawPheromones() {
 
     Real x, y, weight;
     vector<CVector2> trail;
+    vector<size_t> polarity;
     CColor trailColor = CColor::GREEN, pColor = CColor::GREEN;
+    CColor pheromoneColor = CColor::RED;
 
     for(size_t i = 0; i < loopFunctions.PheromoneList.size(); i++) {
         x = loopFunctions.PheromoneList[i].GetLocation().GetX();
@@ -99,7 +101,7 @@ void iAnt_qt_user_functions::DrawPheromones() {
         if(loopFunctions.DrawTrails == 1) {
             trail  = loopFunctions.PheromoneList[i].GetTrail();
             weight = loopFunctions.PheromoneList[i].GetWeight();
-
+            polarity=loopFunctions.PheromoneList[i].GetPolarity();
             if(weight > 0.25 && weight <= 1.0)        // [ 100.0% , 25.0% )
                 pColor = trailColor = CColor::GREEN;
             else if(weight > 0.05 && weight <= 0.25)  // [  25.0% ,  5.0% )
@@ -114,6 +116,20 @@ void iAnt_qt_user_functions::DrawPheromones() {
                 ray = CRay3(CVector3(trail[j - 1].GetX(), trail[j - 1].GetY(), 0.01),
                             CVector3(trail[j].GetX(), trail[j].GetY(), 0.01));
                 DrawRay(ray, trailColor, 1.0);
+               /*Drawing Polarity*/
+                switch(polarity[j-1])
+                {
+                    case 0:
+                        pheromoneColor=CColor::RED;
+                    break;
+                    case 1:
+                        pheromoneColor=CColor::GREEN;
+                    break;
+                    case 2:
+                        pheromoneColor=CColor::BLUE;
+                    break;
+                }
+                DrawCylinder(CVector3(trail[j - 1].GetX(), trail[j - 1].GetY(), 0.01), CQuaternion(), 0.02, 0.025, pheromoneColor);
             }
 
             DrawCylinder(CVector3(x, y, 0.0), CQuaternion(), loopFunctions.FoodRadius, 0.025, pColor);
