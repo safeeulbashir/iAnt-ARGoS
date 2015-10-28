@@ -60,6 +60,7 @@ class iAnt_controller : public CCI_Controller {
         CVector2             fidelityPosition;
         vector<CVector2>     trailToShare;
         vector<CVector2>     trailToFollow;
+        vector<size_t>       polarity;
 
         bool   isHoldingFood;
         bool   isInformed;
@@ -69,6 +70,7 @@ class iAnt_controller : public CCI_Controller {
         size_t waitTime;
         size_t collisionDelay;
         size_t resourceDensity;
+        size_t polarityValue;
 
     private:
 

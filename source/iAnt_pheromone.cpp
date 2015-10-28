@@ -12,6 +12,7 @@
  *****/
 iAnt_pheromone::iAnt_pheromone(CVector2         newLocation,
                                vector<CVector2> newTrail,
+                               vector<size_t>   polarity,
                                Real             newTime,
                                Real             newDecayRate)
 {
@@ -56,6 +57,14 @@ CVector2 iAnt_pheromone::GetLocation() {
 vector<CVector2> iAnt_pheromone::GetTrail() {
     return trail;
 }
+
+/*****
+ * Return the polarity of pheromone trail.
+ *****/
+vector<size_t> iAnt_pheromone::GetPolarity() {
+    return polarity;
+}
+
 
 /*****
  * Return the weight, or strength, of this pheromone.

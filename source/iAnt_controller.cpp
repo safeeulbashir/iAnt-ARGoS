@@ -62,6 +62,8 @@ void iAnt_controller::Init(TConfigurationNode& node) {
 
     CVector2 p(GetPosition());
     startPosition = CVector3(p.GetX(), p.GetY(), 0.0);
+    /*Initializing Polarity*/
+    polarityValue=0;
 }
 
 /*****
@@ -113,6 +115,7 @@ void iAnt_controller::Reset() {
     waitTime            = 0;
     collisionDelay      = 0;
     resourceDensity     = 0;
+    polarityValue       = 0;
     CPFA                = RETURNING;
     targetPosition      = loopFunctions->NestPosition;
     fidelityPosition    = loopFunctions->NestPosition;
@@ -120,6 +123,7 @@ void iAnt_controller::Reset() {
     /* Clear all pheromone trail data. */
     trailToShare.clear();
     trailToFollow.clear();
+    polarity.clear();
 }
 
 /*****
@@ -256,9 +260,11 @@ void iAnt_controller::returning() {
             if(isGivingUpSearch == false) {
                 trailToShare.push_back(loopFunctions->NestPosition);
                 Real timeInSeconds = (Real)(loopFunctions->SimTime / loopFunctions->TicksPerSecond);
-                iAnt_pheromone sharedPheromone(fidelityPosition, trailToShare, timeInSeconds, loopFunctions->RateOfPheromoneDecay);
+                iAnt_pheromone sharedPheromone(fidelityPosition, trailToShare, polarity, timeInSeconds, loopFunctions->RateOfPheromoneDecay);
     			loopFunctions->PheromoneList.push_back(sharedPheromone);
                 trailToShare.clear();
+                polarity.clear();
+                polarityValue=0;
                 sharedPheromone.Deactivate(); // make sure this won't get re-added later...
             } else {
                 isGivingUpSearch = false;
@@ -336,7 +342,11 @@ void iAnt_controller::SetHoldingFood() {
             SetLocalResourceDensity();
         }
         /* We dropped off food. Clear the built-up pheromone trail. */
-        else trailToShare.clear();
+        else {
+            trailToShare.clear();
+            polarity.clear();
+            polarityValue=0;
+        }
     }
     /* Drop off food: We are holding food and have reached the nest. */
     else if((GetPosition() - loopFunctions->NestPosition).SquareLength() < loopFunctions->NestRadiusSquared) {
@@ -347,6 +357,11 @@ void iAnt_controller::SetHoldingFood() {
        pheromone trail attached to this found food item. */
     if(IsHoldingFood() == true && loopFunctions->SimTime % loopFunctions->DrawDensityRate == 0) {
         trailToShare.push_back(GetPosition());
+        /*Logic Control for Polarity.*/
+        if(polarityValue==3)
+            polarityValue=0;
+        polarity.push_back(polarityValue++);
+
     }
 }
 
