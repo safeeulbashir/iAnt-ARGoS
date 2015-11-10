@@ -151,7 +151,7 @@ void iAnt_controller::departing() {
     }
     else {
         CVector2 distance2=(GetPosition()-targetPosition);
-        if((trailIndexTraverser>1) && distance2.SquareLength()<distanceTolerance)
+        if((trailIndexTraverser>0) && distance2.SquareLength()<distanceTolerance)
         {
              trailIndexTraverser--;
             SetTargetInBounds(trailToFollow[trailIndexTraverser]);
