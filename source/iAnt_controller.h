@@ -57,6 +57,7 @@ class iAnt_controller : public CCI_Controller {
         iAnt_loop_functions* loopFunctions;
         CVector3             startPosition;
         CVector2             targetPosition;
+        CVector2             finalTarget; //This is the location of the food position. Adding this because we may use targetPosition as temporary target holder
         CVector2             fidelityPosition;
         vector<CVector2>     trailToShare;
         vector<CVector2>     trailToFollow;
@@ -71,6 +72,7 @@ class iAnt_controller : public CCI_Controller {
         size_t collisionDelay;
         size_t resourceDensity;
         size_t polarityValue;
+        size_t trailIndexTraverser;
 
     private:
 

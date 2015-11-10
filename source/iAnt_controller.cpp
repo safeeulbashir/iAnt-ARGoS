@@ -64,6 +64,7 @@ void iAnt_controller::Init(TConfigurationNode& node) {
     startPosition = CVector3(p.GetX(), p.GetY(), 0.0);
     /*Initializing Polarity*/
     polarityValue=0;
+    trailIndexTraverser=0;
 }
 
 /*****
@@ -118,6 +119,7 @@ void iAnt_controller::Reset() {
     polarityValue       = 0;
     CPFA                = RETURNING;
     targetPosition      = loopFunctions->NestPosition;
+    finalTarget         =loopFunctions->NestPosition;
     fidelityPosition    = loopFunctions->NestPosition;
 
     /* Clear all pheromone trail data. */
@@ -134,7 +136,7 @@ void iAnt_controller::Reset() {
  ****/
 void iAnt_controller::departing() {
 
-    CVector2 distance = (GetPosition() - targetPosition);
+    CVector2 distance = (GetPosition() - finalTarget);
     Real randomNumber = RNG->Uniform(CRange<Real>(0.0, 1.0));
     
     /* Are we informed? I.E. using site fidelity or pheromones. */
@@ -146,6 +148,16 @@ void iAnt_controller::departing() {
             isUsingSiteFidelity = false;
             SetFidelityList();
         }
+    }
+    else {
+        CVector2 distance2=(GetPosition()-targetPosition);
+        if((trailIndexTraverser>1) && distance2.SquareLength()<distanceTolerance)
+        {
+             trailIndexTraverser--;
+            SetTargetInBounds(trailToFollow[trailIndexTraverser]);
+            LOG<<"New target settled\n";
+            LOG<<"Targetted X"<<targetPosition.GetX()<<" Targetted Y "<<targetPosition.GetY()<<endl;
+        }   
     }
 
     /* When not informed, continue to travel until randomly switching to the searching state. */
@@ -163,9 +175,10 @@ void iAnt_controller::departing() {
 
         SetTargetInBounds(turn_vector + GetPosition());
     }
-
+    LOG<<distance.SquareLength()<<"\n";
     /* Adjust motor speeds and direction based on the target position. */
     ApproachTheTarget();
+    //targetPosition=trailToFollow[--trailIndexTraverser]; 
 }
 
 /*****
@@ -468,7 +481,8 @@ void iAnt_controller::SetLocalResourceDensity() {
 void iAnt_controller::SetFidelityList(CVector2 newFidelity) {
 
     vector<CVector2> newFidelityList;
-
+    LOG<<"Dhukse1\n";
+    finalTarget=newFidelity;
     /* Remove this robot's old fidelity position from the fidelity list. */
     for(size_t i = 0; i < loopFunctions->FidelityList.size(); i++) {
         if((loopFunctions->FidelityList[i] - fidelityPosition).SquareLength() != 0.0)
@@ -497,7 +511,6 @@ void iAnt_controller::SetFidelityList() {
         if((loopFunctions->FidelityList[i] - fidelityPosition).SquareLength() != 0.0)
             newFidelityList.push_back(loopFunctions->FidelityList[i]);
     }
-
     /* Update the global fidelity list. */
     loopFunctions->FidelityList = newFidelityList;
 }
@@ -510,7 +523,6 @@ void iAnt_controller::SetFidelityList() {
 bool iAnt_controller::SetTargetPheromone() {
 	double maxStrength = 0.0, randomWeight = 0.0;
     bool isPheromoneSet = false;
-
     /* update the pheromone list and remove inactive pheromones */
     // loopFunctions->UpdatePheromoneList();
 
@@ -531,9 +543,12 @@ bool iAnt_controller::SetTargetPheromone() {
     for(size_t i = 0; i < loopFunctions->PheromoneList.size(); i++) {
 	    if(randomWeight < loopFunctions->PheromoneList[i].GetWeight()) {
             /* We've chosen a pheromone! */
-            SetTargetInBounds(loopFunctions->PheromoneList[i].GetLocation());
+            finalTarget=loopFunctions->PheromoneList[i].GetLocation();
             trailToFollow = loopFunctions->PheromoneList[i].GetTrail();
             isPheromoneSet = true;
+            SetTargetInBounds(trailToFollow[trailToFollow.size()-1]);
+            trailIndexTraverser=trailToFollow.size()-1;
+            LOG<<"Pheromone Selected\n";
             /* If we pick a pheromone, break out of this loop. */
             break;
 	    }
@@ -541,7 +556,6 @@ bool iAnt_controller::SetTargetPheromone() {
         /* We didn't pick a pheromone! Remove its weight from randomWeight. */
         randomWeight -= loopFunctions->PheromoneList[i].GetWeight();
     }
-
     return isPheromoneSet;
 }
 

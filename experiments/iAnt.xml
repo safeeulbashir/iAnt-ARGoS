@@ -10,13 +10,13 @@
 -->
 
     <experiment ticks_per_second = "16"
-                random_seed      = "1337"/>
+                random_seed      = "125468"/>
 
 </framework>
 
 <controllers>
     <iAnt_controller id      = "iAnt_c"
-                     library = "build/source/libiAnt_controller">
+                     library = "build/source/libiAnt_controller.so">
 
         <actuators>
             <differential_steering implementation = "default"/>
@@ -42,7 +42,7 @@
     </controllers>
 
     <!-- LOOP FUNCTIONS -->
-    <loop_functions library = "build/source/libiAnt_loop_functions"
+    <loop_functions library = "build/source/libiAnt_loop_functions.so"
                     label   = "iAnt_loop_functions">
 
         <!-- evolvable parameters -->
@@ -98,7 +98,7 @@
                       layout="2, 3, 1" />
             <orientation method="constant" values="0.0, 0.0, 0.0" />
 
-            <entity quantity="6" max_trials="100">
+            <entity quantity="1" max_trials="100">
                 <foot-bot id="fb_"><controller config="iAnt_c"/></foot-bot>
             </entity>
         </distribute>
