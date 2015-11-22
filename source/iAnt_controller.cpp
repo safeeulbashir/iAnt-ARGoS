@@ -15,6 +15,9 @@ iAnt_controller::iAnt_controller() :
     RNG(NULL),
     loopFunctions(NULL),
     isHoldingFood(false),
+    isTrailFound(false),
+    isLookingForInitialDirection(false),
+    isTowardForward(false),
     isInformed(false),
     isUsingSiteFidelity(false),
     isGivingUpSearch(false),
@@ -112,6 +115,8 @@ void iAnt_controller::Reset() {
     isHoldingFood       = false;
     isInformed          = false;
     isUsingSiteFidelity = false;
+    isTrailFound        = false;
+    isLookingForInitialDirection=false;
     searchTime          = 0;
     waitTime            = 0;
     collisionDelay      = 0;
@@ -126,6 +131,7 @@ void iAnt_controller::Reset() {
     trailToShare.clear();
     trailToFollow.clear();
     polarity.clear();
+    trailPolarity.clear();
 }
 
 /*****
@@ -155,8 +161,8 @@ void iAnt_controller::departing() {
         {
              trailIndexTraverser--;
             SetTargetInBounds(trailToFollow[trailIndexTraverser]);
-            LOG<<"New target settled\n";
-            LOG<<"Targetted X"<<targetPosition.GetX()<<" Targetted Y "<<targetPosition.GetY()<<endl;
+            //LOG<<"New target settled\n";
+            //LOG<<"Targetted X"<<targetPosition.GetX()<<" Targetted Y "<<targetPosition.GetY()<<endl;
         }   
     }
 
@@ -175,7 +181,7 @@ void iAnt_controller::departing() {
 
         SetTargetInBounds(turn_vector + GetPosition());
     }
-    LOG<<distance.SquareLength()<<"\n";
+    //LOG<<distance.SquareLength()<<"\n";
     /* Adjust motor speeds and direction based on the target position. */
     ApproachTheTarget();
     //targetPosition=trailToFollow[--trailIndexTraverser]; 
@@ -189,7 +195,15 @@ void iAnt_controller::departing() {
 void iAnt_controller::searching() {
     /* "scan" for food only every half of a second */
     if(loopFunctions->SimTime % (loopFunctions->TicksPerSecond / 2) == 0) {
-        SetHoldingFood();
+        if(isTrailFound==false)
+        {
+            SetHoldingFood();
+        }
+        
+            //LOG<<"Called\n";
+            SetSerchingPheromone();    
+        
+        
     }
 
     /* When not carrying food, calculate movement. */
@@ -319,8 +333,7 @@ void iAnt_controller::returning() {
  * food then the appropriate boolean flags are triggered.
  *****/
 void iAnt_controller::SetHoldingFood() {
-
-    /* Is the iAnt already holding food? */
+       /* Is the iAnt already holding food? */
     if(IsHoldingFood() == false) {
 
         /* No, the iAnt isn't holding food. Check if we have found food at our
@@ -377,6 +390,74 @@ void iAnt_controller::SetHoldingFood() {
 
     }
 }
+/*****
+ * Check if the iAnt is finding food. This is defined as the iAnt being within
+ * the distance tolerance of the position of a food item. If the iAnt has found
+ * food then the appropriate boolean flags are triggered.
+ *****/
+void iAnt_controller::SetSerchingPheromone() {
+    /* Is the iAnt already holding food? */
+    if(IsHoldingFood() == false && IsTrailFound() == false) {
+
+        /* No, the iAnt isn't holding food. Check if we have found pheromone at our
+           current position*/
+        for(int count=0;count<loopFunctions->PheromoneList.size();count++)
+        {
+            if(loopFunctions->PheromoneList[count].IsActive()==true) //Checks only active pGetheromones
+            {  
+                vector<CVector2>trail=loopFunctions->PheromoneList[count].GetTrail();
+                vector<size_t>tempPolarity=loopFunctions->PheromoneList[count].GetPolarity();
+                for(int counter=0;counter<trail.size();counter++)
+                {
+                    if(sqrt((GetPosition()-trail[counter]).SquareLength())<=distanceTolerance)
+                    {
+                        isTrailFound = true;
+                        trailToFollow=trail;
+                        trailPolarity=tempPolarity;
+                        polarityValue=trailPolarity[targetIndex];
+                        targetIndex=counter;
+                        //LOG<<"Trail Found\n";
+                        isLookingForInitialDirection=false;
+                    }
+                }
+            }
+        }
+       
+    }
+    /* We Found the Trail and We are checking for direction. Need to code */
+    else if(isTrailFound==true) {
+        
+        if(isLookingForInitialDirection==false){
+            int v1 = rand() % 100;
+            if((v1%2)==0) //If even
+            {
+                isTowardForward=true;
+                targetPosition=trailToFollow[++targetIndex];
+                //LOG<<"Forward Direction\n";
+            }
+            else {
+                isTowardForward=false;
+                targetPosition=trailToFollow[--targetIndex];
+               // LOG<<"Backward Direction\n";
+            }
+            isLookingForInitialDirection=true;
+            
+        }
+        else{   // Intial direction found.
+            if((GetPosition()-targetPosition).SquareLength()<distanceTolerance) //We are at the position
+            {   //LOG<<"Temporary target reached\n";
+                targetPosition=trailToFollow[--targetIndex]; 
+                trailIndexTraverser=targetIndex;
+                finalTarget=trailToFollow[0];
+                CPFA = DEPARTING;
+                isTrailFound=false;
+
+            }
+        }
+    }
+    ApproachTheTarget();
+}
+
 
 /*****
  * Set the target to a random position along the edge of the arena.
@@ -481,7 +562,7 @@ void iAnt_controller::SetLocalResourceDensity() {
 void iAnt_controller::SetFidelityList(CVector2 newFidelity) {
 
     vector<CVector2> newFidelityList;
-    LOG<<"Dhukse1\n";
+    //LOG<<"Dhukse1\n";
     finalTarget=newFidelity;
     /* Remove this robot's old fidelity position from the fidelity list. */
     for(size_t i = 0; i < loopFunctions->FidelityList.size(); i++) {
@@ -548,7 +629,7 @@ bool iAnt_controller::SetTargetPheromone() {
             isPheromoneSet = true;
             SetTargetInBounds(trailToFollow[trailToFollow.size()-1]);
             trailIndexTraverser=trailToFollow.size()-1;
-            LOG<<"Pheromone Selected\n";
+            //LOG<<"Pheromone Selected\n";
             /* If we pick a pheromone, break out of this loop. */
             break;
 	    }

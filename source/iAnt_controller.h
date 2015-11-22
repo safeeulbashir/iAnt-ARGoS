@@ -33,6 +33,7 @@ class iAnt_controller : public CCI_Controller {
         /* public helper functions */
         bool IsHoldingFood() { return isHoldingFood; }
         bool IsInTheNest();
+        bool IsTrailFound(){return isTrailFound;}
         void SetLoopFunctions(iAnt_loop_functions* lf) { loopFunctions = lf; }
         CVector2 GetPosition();
         CVector3 GetStartPosition() { return startPosition; }
@@ -62,11 +63,17 @@ class iAnt_controller : public CCI_Controller {
         vector<CVector2>     trailToShare;
         vector<CVector2>     trailToFollow;
         vector<size_t>       polarity;
+        vector<size_t>       trailPolarity;
 
         bool   isHoldingFood;
         bool   isInformed;
         bool   isUsingSiteFidelity;
         bool   isGivingUpSearch;
+        bool   isTrailFound;
+        bool   isLookingForInitialDirection;
+        bool   isTowardForward;
+        bool   isFinalTowardForward;
+        size_t targetIndex;
         size_t searchTime;
         size_t waitTime;
         size_t collisionDelay;
@@ -86,6 +93,7 @@ class iAnt_controller : public CCI_Controller {
 
         /* CPFA helper functions */
         void SetHoldingFood();
+        void SetSerchingPheromone();
         void SetRandomSearchLocation();
         void SetLocalResourceDensity();
         void SetFidelityList(CVector2 newFidelity);
